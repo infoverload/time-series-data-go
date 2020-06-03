@@ -26,8 +26,8 @@ func getISSPosition() (positionISS, error) {
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode < 200 && response.StatusCode > 299 {
-		fmt.Println("HTTP status is not in the 2xx range")
+	if response.StatusCode / 100 != 2 {
+		return p, fmt.Errorf("bad response status: %s", response.Status)
 	}
 
 	responseData, err := ioutil.ReadAll(response.Body)
@@ -47,7 +47,7 @@ func main() {
 	pos, err := getISSPosition()
 	if err != nil {
 		log.Fatal(err)
-	}
-
+    }
+    
 	fmt.Printf("POINT (  %s  %s  )", pos.IssPosition.Longitude, pos.IssPosition.Latitude)
 }
