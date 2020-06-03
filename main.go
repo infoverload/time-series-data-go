@@ -18,7 +18,6 @@ type positionISS struct {
 }
 
 func pointWKT() (string, error) {
-
     var p positionISS
 
     response, err := http.Get("http://api.open-notify.org/iss-now.json")
@@ -35,9 +34,10 @@ func pointWKT() (string, error) {
     err = json.Unmarshal(responseData, &p)
     if err != nil {
         return "", fmt.Errorf("unable to unmarshal response body: %v", err)
-    }
-
-    return "POINT ( " + p.IssPosition.Longitude + " " + p.IssPosition.Latitude + " )", nil
+	}
+	
+    s := fmt.Sprintf( "POINT (  %s  %s  )" , p.IssPosition.Longitude, p.IssPosition.Latitude)
+    return s, nil
 }
 
 func main() {
