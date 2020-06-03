@@ -26,7 +26,7 @@ func getISSPosition() (issInfo, error) {
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode / 100 != 2 {
+	if response.StatusCode/100 != 2 {
 		return i, fmt.Errorf("bad response status: %s", response.Status)
 	}
 
@@ -47,6 +47,6 @@ func main() {
 	pos, err := getISSPosition()
 	if err != nil {
 		log.Fatal(err)
-    }
+	}
 	fmt.Printf("POINT (%s %s)\n", pos.IssPosition.Longitude, pos.IssPosition.Latitude)
 }
