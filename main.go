@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-type positionISS struct {
+type issInfo struct {
 	Timestamp   int    `json:"timestamp"`
 	Message     string `json:"message"`
 	IssPosition struct {
@@ -17,30 +17,30 @@ type positionISS struct {
 	} `json:"iss_position"`
 }
 
-func getISSPosition() (positionISS, error) {
-	var p positionISS
+func getISSPosition() (issInfo, error) {
+	var i issInfo
 
 	response, err := http.Get("http://api.open-notify.org/iss-now.json")
 	if err != nil {
-		return p, fmt.Errorf("unable to retrieve request: %v", err)
+		return i, fmt.Errorf("unable to retrieve request: %v", err)
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode / 100 != 2 {
-		return p, fmt.Errorf("bad response status: %s", response.Status)
+		return i, fmt.Errorf("bad response status: %s", response.Status)
 	}
 
 	responseData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return p, fmt.Errorf("unable to read response body: %v", err)
+		return i, fmt.Errorf("unable to read response body: %v", err)
 	}
 
-	err = json.Unmarshal(responseData, &p)
+	err = json.Unmarshal(responseData, &i)
 	if err != nil {
-		return p, fmt.Errorf("unable to unmarshal response body: %v", err)
+		return i, fmt.Errorf("unable to unmarshal response body: %v", err)
 	}
 
-	return p, nil
+	return i, nil
 }
 
 func main() {
@@ -48,6 +48,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
     }
-    
-	fmt.Printf("POINT (  %s  %s  )", pos.IssPosition.Longitude, pos.IssPosition.Latitude)
+	fmt.Printf("POINT (%s %s)\n", pos.IssPosition.Longitude, pos.IssPosition.Latitude)
 }
