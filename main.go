@@ -1,11 +1,11 @@
 package main
 
 import (
-    "encoding/json"
-    "fmt"
-    "io/ioutil"
-    "log"
-    "net/http"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 type positionISS struct {
@@ -17,33 +17,37 @@ type positionISS struct {
 	} `json:"iss_position"`
 }
 
-func pointWKT() (string, error) {
-    var p positionISS
+func getISSPosition() (positionISS, error) {
+	var p positionISS
 
-    response, err := http.Get("http://api.open-notify.org/iss-now.json")
-    if err != nil {
-        return "", fmt.Errorf("unable to retrieve request: %v", err)
-    }
-    defer response.Body.Close()
-
-    responseData, err := ioutil.ReadAll(response.Body)
-    if err != nil {
-        return "", fmt.Errorf("unable to read response body: %v", err)
-    }
-
-    err = json.Unmarshal(responseData, &p)
-    if err != nil {
-        return "", fmt.Errorf("unable to unmarshal response body: %v", err)
+	response, err := http.Get("http://api.open-notify.org/iss-now.json")
+	if err != nil {
+		return p, fmt.Errorf("unable to retrieve request: %v", err)
 	}
-	
-    s := fmt.Sprintf( "POINT (  %s  %s  )" , p.IssPosition.Longitude, p.IssPosition.Latitude)
-    return s, nil
+	defer response.Body.Close()
+
+	if response.StatusCode < 200 && response.StatusCode > 299 {
+		fmt.Println("HTTP status is not in the 2xx range")
+	}
+
+	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return p, fmt.Errorf("unable to read response body: %v", err)
+	}
+
+	err = json.Unmarshal(responseData, &p)
+	if err != nil {
+		return p, fmt.Errorf("unable to unmarshal response body: %v", err)
+	}
+
+	return p, nil
 }
 
 func main() {
-    pos, err := pointWKT()
-    if err != nil {
-      log.Fatal(err)
-    }
-    fmt.Println(pos)  
+	pos, err := getISSPosition()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("POINT (  %s  %s  )", pos.IssPosition.Longitude, pos.IssPosition.Latitude)
 }
