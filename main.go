@@ -15,7 +15,7 @@ import (
 var dbpool *pgxpool.Pool
 
 func createTable() error {
-	_, err := dbpool.Exec(context.Background(), "CREATE TABLE iss (timestamp TIMESTAMP GENERATED ALWAYS AS CURRENT_TIMESTAMP, position GEO_POINT)")
+	_, err := dbpool.Exec(context.Background(), "CREATE TABLE iss (timestamp TIMESTAMP GENERATED ALWAYS AS CURRENT_TIMESTAMP, position TEXT)")
 	return err
 }
 
