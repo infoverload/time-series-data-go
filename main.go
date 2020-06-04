@@ -75,10 +75,10 @@ func getISSPosition() (string, error) {
 }
 
 func main() {
-	hosts := flag.String("hosts", "", "CrateDB hostname")
+	host := flag.String("host", "", "CrateDB hostname")
 	port := flag.Int("port", 5432, "CrateDB postgresql port")
 	flag.Parse()
-	connStr := fmt.Sprintf("postgresql://crate@%s:%d/doc", *hosts, *port)
+	connStr := fmt.Sprintf("postgresql://crate@%s:%d/doc", *host, *port)
 
 	var err error
 	conn, err = pgx.Connect(context.Background(), connStr)
