@@ -40,8 +40,6 @@ func listData() error {
 }
 
 type issInfo struct {
-	Timestamp   int    `json:"timestamp"`
-	Message     string `json:"message"`
 	IssPosition struct {
 		Longitude string `json:"longitude"`
 		Latitude  string `json:"latitude"`
