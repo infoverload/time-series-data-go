@@ -80,7 +80,7 @@ func main() {
 				os.Exit(1)
 			}
 		}
-		fmt.Println("Sleeping for 10 seconds...")
-		time.Sleep(time.Second * 10)
+		fmt.Println("Sleeping for 5 seconds...")
+		time.Sleep(time.Second * 5)
 	}
 }
