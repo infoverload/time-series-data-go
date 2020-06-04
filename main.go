@@ -15,17 +15,17 @@ import (
 var dbpool *pgxpool.Pool
 
 func createTable() error {
-	_, err := dbpool.Exec(context.Background(), "CREATE TABLE iss2 (timestamp TIMESTAMP GENERATED ALWAYS AS CURRENT_TIMESTAMP, position GEO_POINT)")
+	_, err := dbpool.Exec(context.Background(), "CREATE TABLE iss (timestamp TIMESTAMP GENERATED ALWAYS AS CURRENT_TIMESTAMP, position GEO_POINT)")
 	return err
 }
 
 func insertData(position string) error {
-	_, err := dbpool.Exec(context.Background(), "INSERT INTO iss2 (position) VALUES ('?')", position)
+	_, err := dbpool.Exec(context.Background(), "INSERT INTO iss(position) VALUES($1)", position)
 	return err
 }
 
 func listData() error {
-	rows, _ := dbpool.Query(context.Background(), "SELECT * FROM iss2")
+	rows, _ := dbpool.Query(context.Background(), "SELECT * FROM iss")
 
 	for rows.Next() {
 		var timestamp string
@@ -71,8 +71,8 @@ func getISSPosition() (string, error) {
 		return "", fmt.Errorf("unable to unmarshal response body: %v", err)
 	}
 
-	s := fmt.Sprintf("POINT (%s %s)", i.IssPosition.Longitude, i.IssPosition.Latitude)
-    return s, nil
+	s := fmt.Sprintf("POINT(%s %s)", i.IssPosition.Longitude, i.IssPosition.Latitude)
+	return s, nil
 }
 
 func main() {
