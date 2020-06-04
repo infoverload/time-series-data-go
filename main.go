@@ -3,29 +3,30 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v4"
 )
 
-var dbpool *pgxpool.Pool
+var conn *pgx.Conn
 
 func createTable() error {
-	_, err := dbpool.Exec(context.Background(), "CREATE TABLE iss (timestamp TIMESTAMP GENERATED ALWAYS AS CURRENT_TIMESTAMP, position TEXT)")
+	_, err := conn.Exec(context.Background(), "CREATE TABLE iss (timestamp TIMESTAMP GENERATED ALWAYS AS CURRENT_TIMESTAMP, position TEXT)")
 	return err
 }
 
 func insertData(position string) error {
-	_, err := dbpool.Exec(context.Background(), "INSERT INTO iss (position) VALUES ($1)", position)
+	_, err := conn.Exec(context.Background(), "INSERT INTO iss (position) VALUES ($1)", position)
 	return err
 }
 
 func listData() error {
-	rows, _ := dbpool.Query(context.Background(), "SELECT * FROM iss")
+	rows, _ := conn.Query(context.Background(), "SELECT * FROM iss")
 
 	for rows.Next() {
 		var timestamp string
@@ -74,13 +75,18 @@ func getISSPosition() (string, error) {
 }
 
 func main() {
+	hosts := flag.String("hosts", "", "CrateDB hostname")
+	port := flag.Int("port", 5432, "CrateDB postgresql port")
+	flag.Parse()
+	connStr := fmt.Sprintf("postgresql://crate@%s:%d/doc", *hosts, *port)
+
 	var err error
-	dbpool, err = pgxpool.Connect(context.Background(), "postgresql://crate@localhost:5433/doc")
+	conn, err = pgx.Connect(context.Background(), connStr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	defer dbpool.Close()
+	defer conn.Close(context.Background())
 
 	err = createTable()
 	if err != nil {
@@ -91,11 +97,12 @@ func main() {
 	pos, err := getISSPosition()
 	if err != nil {
 		log.Fatal(err)
-	}
-	err = insertData(pos)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to insert data: %v\n", err)
-		os.Exit(1)
+	} else {
+		err = insertData(pos)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to insert data: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	err = listData()
