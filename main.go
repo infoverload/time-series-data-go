@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -10,13 +11,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v4/"
 )
 
-var dbpool *pgxpool.Pool
+var conn *pgx.Conn
 
 func insertData(position string) error {
-	_, err := dbpool.Exec(context.Background(), "INSERT INTO iss (position) VALUES ($1)", position)
+	_, err := conn.Exec(context.Background(), "INSERT INTO iss (position) VALUES ($1)", position)
 	return err
 }
 
@@ -55,23 +56,29 @@ func getISSPosition() (string, error) {
 }
 
 func main() {
+	hosts := flag.String("hosts", "", "CrateDB hostname")
+	port := flag.Int("port", 5432, "CrateDB postgresql port")
+	flag.Parse()
+	connStr := fmt.Sprintf("postgresql://crate@%s:%d/doc", *hosts, *port)
+
 	var err error
-	dbpool, err = pgxpool.Connect(context.Background(), "postgresql://crate@localhost:5433/doc")
+	conn, err = pgx.Connect(context.Background(), connStr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	defer dbpool.Close()
+	defer conn.Close(context.Background())
 
 	for {
 		pos, err := getISSPosition()
 		if err != nil {
 			log.Fatal(err)
-		}
-		err = insertData(pos)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to insert data: %v\n", err)
-			os.Exit(1)
+		} else {
+			err = insertData(pos)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Unable to insert data: %v\n", err)
+				os.Exit(1)
+			}
 		}
 		fmt.Println("Sleeping for 10 seconds...")
 		time.Sleep(time.Second * 10)
