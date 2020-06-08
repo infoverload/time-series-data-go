@@ -70,7 +70,7 @@ func getISSPosition() (string, error) {
 		return "", fmt.Errorf("unable to unmarshal response body: %v", err)
 	}
 
-	s := fmt.Sprintf("POINT(%s %s)", i.IssPosition.Longitude, i.IssPosition.Latitude)
+	s := fmt.Sprintf("(%s %s)", i.IssPosition.Longitude, i.IssPosition.Latitude)
 	return s, nil
 }
 
