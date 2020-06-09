@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/jackc/pgx/v4"
@@ -51,36 +50,34 @@ func getISSPosition() (string, error) {
 		return "", fmt.Errorf("unable to unmarshal response body: %v", err)
 	}
 
-	s := fmt.Sprintf("(%s %s)", i.IssPosition.Longitude, i.IssPosition.Latitude)
+	s := fmt.Sprintf("(%s, %s)", i.IssPosition.Longitude, i.IssPosition.Latitude)
 	return s, nil
 }
 
 func main() {
 	host := flag.String("host", "", "CrateDB hostname")
-	port := flag.Int("port", 5432, "CrateDB postgresql port")
+	port := flag.Int("port", 5432, "CrateDB Postgresql port")
 	flag.Parse()
 	connStr := fmt.Sprintf("postgresql://crate@%s:%d/doc", *host, *port)
 
 	var err error
 	conn, err = pgx.Connect(context.Background(), connStr)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("unable to connect to database: %v\n", err)
 	}
 	defer conn.Close(context.Background())
 
 	for {
 		pos, err := getISSPosition()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("unable to get ISS position: %v\n", err)
 		} else {
 			err = insertData(pos)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Unable to insert data: %v\n", err)
-				os.Exit(1)
+				log.Fatalf("unable to insert data: %v\n", err)
 			}
 		}
 		fmt.Println("Sleeping for 5 seconds...")
-		time.Sleep(time.Second * 5)
+		time.Tick(time.Second * 5)
 	}
 }
