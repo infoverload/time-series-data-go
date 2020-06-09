@@ -16,7 +16,7 @@ import (
 var conn *pgx.Conn
 
 func createTable() error {
-	_, err := conn.Exec(context.Background(), "CREATE TABLE iss (timestamp TIMESTAMP GENERATED ALWAYS AS CURRENT_TIMESTAMP, position TEXT)")
+	_, err := conn.Exec(context.Background(), "CREATE TABLE iss (timestamp TIMESTAMP GENERATED ALWAYS AS CURRENT_TIMESTAMP, position GEO_POINT)")
 	return err
 }
 
@@ -70,27 +70,27 @@ func getISSPosition() (string, error) {
 		return "", fmt.Errorf("unable to unmarshal response body: %v", err)
 	}
 
-	s := fmt.Sprintf("(%s %s)", i.IssPosition.Longitude, i.IssPosition.Latitude)
+	s := fmt.Sprintf("(%s, %s)", i.IssPosition.Longitude, i.IssPosition.Latitude)
 	return s, nil
 }
 
 func main() {
 	host := flag.String("host", "", "CrateDB hostname")
-	port := flag.Int("port", 5432, "CrateDB postgresql port")
+	port := flag.Int("port", 5432, "CrateDB Postgresql port")
 	flag.Parse()
 	connStr := fmt.Sprintf("postgresql://crate@%s:%d/doc", *host, *port)
 
 	var err error
 	conn, err = pgx.Connect(context.Background(), connStr)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		fmt.Fprintf(os.Stderr, "unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
 	defer conn.Close(context.Background())
 
 	err = createTable()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create table: %v\n", err)
+		fmt.Fprintf(os.Stderr, "unable to create table: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -100,14 +100,14 @@ func main() {
 	} else {
 		err = insertData(pos)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to insert data: %v\n", err)
+			fmt.Fprintf(os.Stderr, "unable to insert data: %v\n", err)
 			os.Exit(1)
 		}
 	}
 
 	err = listData()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to list data: %v\n", err)
+		fmt.Fprintf(os.Stderr, "unable to list data: %v\n", err)
 		os.Exit(1)
 	}
 }
